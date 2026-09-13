@@ -1,4 +1,4 @@
-package com.niko.jam;
+package io.github.najkouxgod.brokenjam;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;

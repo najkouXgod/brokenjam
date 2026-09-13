@@ -1,4 +1,4 @@
-package com.niko.jam;
+package io.github.najkouxgod.brokenjam;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -14,6 +14,7 @@ public class DrivingScreen implements Screen {
     private ModelBatch modelBatch;
     private Environment environment;
 
+    private Cockpit cockpit;
     private Car car;
     private DriverCamera driverCamera;
     private TestWorld world;
@@ -49,55 +50,55 @@ public class DrivingScreen implements Screen {
         car = new Car();
         driverCamera = new DriverCamera();
         world = new TestWorld();
+        cockpit = new Cockpit();
 
         Gdx.input.setCursorCatched(true);
     }
+@Override
+public void render(float delta) {
 
-    @Override
-    public void render(float delta) {
+    handleCursor();
 
-        handleCursor();
+    car.update(delta);
 
-        car.update(delta);
-        driverCamera.update(car);
+    driverCamera.update(car);
+    cockpit.update(car);
 
-        Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
+    Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
 
-        Gdx.gl.glClearColor(
-            0.4f,
-            0.65f,
-            0.9f,
-            1f
-        );
+    Gdx.gl.glClearColor(
+        0.4f,
+        0.65f,
+        0.9f,
+        1f
+    );
 
-        Gdx.gl.glClear(
-            GL20.GL_COLOR_BUFFER_BIT
-                | GL20.GL_DEPTH_BUFFER_BIT
-        );
+    Gdx.gl.glClear(
+        GL20.GL_COLOR_BUFFER_BIT
+            | GL20.GL_DEPTH_BUFFER_BIT
+    );
 
-        modelBatch.begin(driverCamera.getCamera());
+    modelBatch.begin(driverCamera.getCamera());
 
-        for (var instance : world.getInstances()) {
-            modelBatch.render(instance, environment);
-        }
-
-        modelBatch.end();
+    for (var instance : world.getInstances()) {
+        modelBatch.render(instance, environment);
     }
 
-    private void handleCursor() {
-
-        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-            Gdx.input.setCursorCatched(false);
-        }
-
-        if (
-            Gdx.input.justTouched()
-            && !Gdx.input.isCursorCatched()
-        ) {
-            Gdx.input.setCursorCatched(true);
-        }
+    for (var instance : cockpit.getInstances()) {
+        modelBatch.render(instance, environment);
     }
 
+    modelBatch.end();
+}
+private void handleCursor() {
+    if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+        Gdx.input.setCursorCatched(false);
+    }
+
+    if (Gdx.input.justTouched() && !Gdx.input.isCursorCatched()) {
+        Gdx.input.setCursorCatched(true);
+    }
+}
     @Override
     public void resize(int width, int height) {
         driverCamera.resize(width, height);
@@ -107,6 +108,7 @@ public class DrivingScreen implements Screen {
     public void dispose() {
         modelBatch.dispose();
         world.dispose();
+        cockpit.dispose();
     }
 
     @Override

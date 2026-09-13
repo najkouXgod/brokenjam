@@ -1,4 +1,4 @@
-package com.niko.jam;
+package io.github.najkouxgod.brokenjam;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
@@ -54,16 +54,19 @@ public class DriverCamera {
                 MAX_HEAD_PITCH
             );
         }
+Vector3 carPosition = car.getPosition();
 
-        Vector3 carPosition = car.getPosition();
+float driverOffset = -0.45f;
 
-        // Förarens huvudhöjd.
-        // Sen kan vi lägga till offset åt vänster när cockpit finns.
-        camera.position.set(
-            carPosition.x,
-            carPosition.y + 1.35f,
-            carPosition.z
-        );
+// Bilens lokala "höger"-vektor
+float rightX = MathUtils.cosDeg(car.getYaw());
+float rightZ = MathUtils.sinDeg(car.getYaw());
+
+camera.position.set(
+    carPosition.x + rightX * driverOffset,
+    carPosition.y + 1.35f,
+    carPosition.z + rightZ * driverOffset
+);
 
         float totalYaw = car.getYaw() + headYaw;
 
