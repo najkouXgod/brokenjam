@@ -7,16 +7,24 @@ import com.badlogic.gdx.math.Vector3;
 
 public class DriverCamera {
 
-    private static final float MOUSE_SENSITIVITY = 0.15f;
+    private static final float MOUSE_SENSITIVITY = 0.18f;
 
     private static final float MAX_HEAD_YAW = 100f;
     private static final float MIN_HEAD_PITCH = -45f;
     private static final float MAX_HEAD_PITCH = 50f;
 
+    // Hur snabbt kameran hinner ikapp musens mål.
+    private static final float LOOK_SMOOTHING = 18f;
+
     private final PerspectiveCamera camera;
 
-    private float headYaw = 0f;
-    private float headPitch = 0f;
+    // Där musen vill att huvudet ska vara.
+    private float targetYaw = 0f;
+    private float targetPitch = 0f;
+
+    // Där huvudet faktiskt befinner sig.
+    private float currentYaw = 0f;
+    private float currentPitch = 0f;
 
     public DriverCamera() {
         camera = new PerspectiveCamera(
@@ -31,60 +39,75 @@ public class DriverCamera {
         camera.update();
     }
 
-    public void update(Car car) {
+    public void update(Car car, float delta) {
 
-        // Bara mouse-look när musen är fångad
         if (Gdx.input.isCursorCatched()) {
 
-            float mouseX = Gdx.input.getDeltaX();
-            float mouseY = Gdx.input.getDeltaY();
+            float mouseX = MathUtils.clamp(
+                Gdx.input.getDeltaX(),
+                -25,
+                25
+            );
 
-            headYaw -= mouseX * MOUSE_SENSITIVITY;
-            headPitch -= mouseY * MOUSE_SENSITIVITY;
+            float mouseY = MathUtils.clamp(
+                Gdx.input.getDeltaY(),
+                -25,
+                25
+            );
 
-            headYaw = MathUtils.clamp(
-                headYaw,
+            targetYaw += mouseX * MOUSE_SENSITIVITY;
+            targetPitch -= mouseY * MOUSE_SENSITIVITY;
+
+            targetYaw = MathUtils.clamp(
+                targetYaw,
                 -MAX_HEAD_YAW,
                 MAX_HEAD_YAW
             );
 
-            headPitch = MathUtils.clamp(
-                headPitch,
+            targetPitch = MathUtils.clamp(
+                targetPitch,
                 MIN_HEAD_PITCH,
                 MAX_HEAD_PITCH
             );
         }
-Vector3 carPosition = car.getPosition();
 
-float driverOffset = -0.45f;
+        // Frame-rate independent smoothing.
+        float smoothing =
+            1f - (float)Math.exp(-LOOK_SMOOTHING * delta);
 
-// Bilens lokala "höger"-vektor
-float rightX = MathUtils.cosDeg(car.getYaw());
-float rightZ = MathUtils.sinDeg(car.getYaw());
+        currentYaw = MathUtils.lerp(
+            currentYaw,
+            targetYaw,
+            smoothing
+        );
 
-camera.position.set(
-    carPosition.x + rightX * driverOffset,
-    carPosition.y + 1.35f,
-    carPosition.z + rightZ * driverOffset
-);
+        currentPitch = MathUtils.lerp(
+            currentPitch,
+            targetPitch,
+            smoothing
+        );
 
-        float totalYaw = car.getYaw() + headYaw;
+        Vector3 carPosition = car.getPosition();
 
-        float cosPitch = MathUtils.cosDeg(headPitch);
+        float driverOffset = -0.45f;
 
-        float directionX =
-            MathUtils.sinDeg(totalYaw) * cosPitch;
+        float rightX = MathUtils.cosDeg(car.getYaw());
+        float rightZ = MathUtils.sinDeg(car.getYaw());
 
-        float directionY =
-            MathUtils.sinDeg(headPitch);
+        camera.position.set(
+            carPosition.x + rightX * driverOffset,
+            carPosition.y + 1.35f,
+            carPosition.z + rightZ * driverOffset
+        );
 
-        float directionZ =
-            -MathUtils.cosDeg(totalYaw) * cosPitch;
+        float totalYaw = car.getYaw() + currentYaw;
+
+        float cosPitch = MathUtils.cosDeg(currentPitch);
 
         camera.direction.set(
-            directionX,
-            directionY,
-            directionZ
+            MathUtils.sinDeg(totalYaw) * cosPitch,
+            MathUtils.sinDeg(currentPitch),
+            -MathUtils.cosDeg(totalYaw) * cosPitch
         ).nor();
 
         camera.up.set(Vector3.Y);

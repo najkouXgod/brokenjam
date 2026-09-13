@@ -63,7 +63,7 @@ public void render(float delta) {
 
     car.update(delta);
 
-    driverCamera.update(car);
+    driverCamera.update(car, delta);
     cockpit.update(car);
     instructor.update(car);
 
