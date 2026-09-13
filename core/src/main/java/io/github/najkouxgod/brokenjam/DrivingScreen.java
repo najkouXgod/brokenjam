@@ -14,6 +14,7 @@ public class DrivingScreen implements Screen {
     private ModelBatch modelBatch;
     private Environment environment;
 
+    private Instructor instructor;
     private Cockpit cockpit;
     private Car car;
     private DriverCamera driverCamera;
@@ -51,6 +52,7 @@ public class DrivingScreen implements Screen {
         driverCamera = new DriverCamera();
         world = new TestWorld();
         cockpit = new Cockpit();
+        instructor = new Instructor();
 
         Gdx.input.setCursorCatched(true);
     }
@@ -63,6 +65,7 @@ public void render(float delta) {
 
     driverCamera.update(car);
     cockpit.update(car);
+    instructor.update(car);
 
     Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
 
@@ -88,6 +91,10 @@ public void render(float delta) {
         modelBatch.render(instance, environment);
     }
 
+    for (var instance : instructor.getInstances()) {
+    modelBatch.render(instance, environment);
+}
+
     modelBatch.end();
 }
 private void handleCursor() {
@@ -109,6 +116,7 @@ private void handleCursor() {
         modelBatch.dispose();
         world.dispose();
         cockpit.dispose();
+        instructor.dispose();
     }
 
     @Override
